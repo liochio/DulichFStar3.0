@@ -1,6 +1,7 @@
 package com.dichvudulich.models;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -14,8 +15,15 @@ import com.dichvudulich.repository.DatabaseFileRepository;
 @Service
 public class DatabaseFileService {
 
-	@SuppressWarnings("unused")
 	private final Path root = Paths.get("uploads");
+
+	public void init() {
+		try {
+			Files.createDirectories(root);
+		} catch (IOException e) {
+			throw new RuntimeException("Could not initialize folder for upload!");
+		}
+	}
 
 	@Autowired
 	private DatabaseFileRepository dbFileRepository;
@@ -29,6 +37,24 @@ public class DatabaseFileService {
 			if (fileName.contains("..")) {
 				throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
 			}
+
+			Path filePath = this.root.resolve(fileName);
+
+			// Check if the file exists
+			int counter = 1;
+			String baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+			String extension = fileName.substring(fileName.lastIndexOf('.') + 1);
+			while (Files.exists(filePath)) {
+				fileName = baseName + " (" + counter + ")." + extension;
+				filePath = this.root.resolve(fileName);
+				counter++;
+			}
+
+			// Copy the new file
+			Files.copy(file.getInputStream(), filePath);
+
+			// Files.copy(file.getInputStream(),
+			// this.root.resolve(file.getOriginalFilename()));
 
 			DatabaseFile dbFile = new DatabaseFile(fileName, file.getContentType(), file.getBytes());
 
