@@ -7,8 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
@@ -37,10 +35,6 @@ public class HoadonEntity implements Serializable {
 	private String email;
 	private Date thoigian;
 	private Date thoigiankhoihanh;
-
-	@OneToOne
-	@JoinColumn(name = "id_khachhang")
-	private KhachhangEntity khachhang;
 
 	public HoadonEntity() {
 		super();

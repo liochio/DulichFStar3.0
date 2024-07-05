@@ -1,14 +1,11 @@
 package com.dichvudulich.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
@@ -26,9 +23,6 @@ public class LoaitintucEntity implements Serializable {
 	@Size(max = 50)
 	private String tenloaitintuc;
 	private Boolean trangthai;
-
-	@OneToMany(mappedBy = "loaitintuc")
-	private List<TintucEntity> entities = new ArrayList<>();
 
 	public LoaitintucEntity() {
 		super();

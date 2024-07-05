@@ -1,7 +1,6 @@
 package com.dichvudulich.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -9,9 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
@@ -43,17 +39,6 @@ public class NhanvienEntity implements Serializable {
 	private String ghichu;
 	private Boolean trangthai;
 
-	@OneToMany(mappedBy = "users")
-	private List<UsersEntity> entities = new ArrayList<>();
-
-	@OneToOne
-	@JoinColumn(name = "id_tintuc")
-	private TintucEntity tintuc;
-
-	@OneToOne
-	@JoinColumn(name = "id_dichvu")
-	private DichvuEntity dichvu;
-
 	public NhanvienEntity() {
 		super();
 	}
@@ -74,7 +59,6 @@ public class NhanvienEntity implements Serializable {
 		this.hinhanh = hinhanh;
 		this.ghichu = ghichu;
 		this.trangthai = trangthai;
-		this.entities = entities;
 	}
 
 	public Long getId() {
@@ -163,18 +147,6 @@ public class NhanvienEntity implements Serializable {
 
 	public void setTrangthai(Boolean trangthai) {
 		this.trangthai = trangthai;
-	}
-
-	public List<UsersEntity> getEntities() {
-		return entities;
-	}
-
-	public void setEntities(List<UsersEntity> entities) {
-		this.entities = entities;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
 	}
 
 }

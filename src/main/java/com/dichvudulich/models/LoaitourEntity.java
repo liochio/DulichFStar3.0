@@ -1,17 +1,15 @@
 package com.dichvudulich.models;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Size;
-
+@Getter
+@Setter
 @Entity
 @Table(name = "loaitour")
 public class LoaitourEntity implements Serializable {
@@ -27,8 +25,29 @@ public class LoaitourEntity implements Serializable {
 	private String tenloaitour;
 	private Boolean trangthai;
 
-	@OneToMany(mappedBy = "loaitour")
-	private List<TourEntity> entities = new ArrayList<>();
+//	@ManyToMany(fetch = FetchType.LAZY)
+//	@JoinTable(name = "tour_detail", joinColumns = @JoinColumn(name = "loaitour_id"), inverseJoinColumns = @JoinColumn(name = "tour_id"))
+//	private Set<TourEntity> tour = new HashSet<>();
+	
+	
+	@OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.PERSIST)
+	@JoinColumn(name = "tour_id")
+	List<TourEntity> tour;
+	
+
+
+
+	public List<TourEntity> getTour() {
+		return tour;
+	}
+
+	public void setTour(List<TourEntity> tour) {
+		this.tour = tour;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 
 	public LoaitourEntity() {
 		super();
@@ -39,41 +58,5 @@ public class LoaitourEntity implements Serializable {
 		this.maloaitour = maloaitour;
 		this.tenloaitour = tenloaitour;
 		this.trangthai = trangthai;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getMaloaitour() {
-		return maloaitour;
-	}
-
-	public void setMaloaitour(String maloaitour) {
-		this.maloaitour = maloaitour;
-	}
-
-	public String getTenloaitour() {
-		return tenloaitour;
-	}
-
-	public void setTenloaitour(String tenloaitour) {
-		this.tenloaitour = tenloaitour;
-	}
-
-	public Boolean getTrangthai() {
-		return trangthai;
-	}
-
-	public void setTrangthai(Boolean trangthai) {
-		this.trangthai = trangthai;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
 	}
 }

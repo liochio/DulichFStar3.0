@@ -1,7 +1,6 @@
 package com.dichvudulich.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -9,9 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Size;
 
@@ -34,13 +30,6 @@ public class TintucEntity implements Serializable {
 
 	private Date thoigian;
 
-	@OneToOne
-	@JoinColumn(name = "id_loaitintuc")
-	private LoaitintucEntity loaitintuc;
-
-	@OneToMany(mappedBy = "tintuc")
-	private List<NhanvienEntity> entities = new ArrayList<>();
-
 	public TintucEntity() {
 		super();
 	}
@@ -55,8 +44,6 @@ public class TintucEntity implements Serializable {
 		this.hinhanh = hinhanh;
 		this.trangthai = trangthai;
 		this.thoigian = thoigian;
-		this.loaitintuc = loaitintuc;
-		this.entities = entities;
 	}
 
 	public Long getId() {
@@ -105,22 +92,6 @@ public class TintucEntity implements Serializable {
 
 	public void setThoigian(Date thoigian) {
 		this.thoigian = thoigian;
-	}
-
-	public LoaitintucEntity getLoaitintuc() {
-		return loaitintuc;
-	}
-
-	public void setLoaitintuc(LoaitintucEntity loaitintuc) {
-		this.loaitintuc = loaitintuc;
-	}
-
-	public List<NhanvienEntity> getEntities() {
-		return entities;
-	}
-
-	public void setEntities(List<NhanvienEntity> entities) {
-		this.entities = entities;
 	}
 
 	public static long getSerialversionuid() {

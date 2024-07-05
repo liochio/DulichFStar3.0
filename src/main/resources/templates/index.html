@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Admin Page</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		/* Custom CSS for Admin Page */
+		body {
+			font-family: Arial, sans-serif;
+		}
+
+		#sidebar {
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			width: 250px;
+			padding-top: 56px;
+			overflow-y: auto;
+			background-color: #343a40;
+			color: #fff;
+		}
+
+		#content {
+			margin-left: 250px;
+			padding: 100px;
+		}
+
+		.card {
+			margin-bottom: 20px;
+		}
+
+		/* Thêm CSS để tô màu cho nút phân trang được nhấp */
+		#pagination button.active {
+			background-color: #007bff;
+			color: #fff;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- Navbar -->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="#">Admin Panel</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+				aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item">
+						<a class="nav-link" href="#">Logout</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+
+	<!-- Sidebar -->
+	<div id="sidebar">
+		<ul class="nav flex-column">
+			<li class="nav-item">
+				<a class="nav-link active" href="#">Dashboard</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Products</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Orders</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Customers</a>
+			</li>
+		</ul>
+	</div>
+
+	<!-- Page Content -->
+	<div id="content">
+		<div class="row" id="data"></div>
+		<div id="pagination"></div>
+	</div>
+
+	<!-- JavaScript to fetch and display data -->
+	<script>
+		// Định nghĩa phương thức loadData trước khi sử dụng
+		function loadData(page) {
+			const pageSize = 3; // Kích thước trang
+
+			fetch(`http://localhost:8080/api/auth/loaitour?page=${page}&size=${pageSize}`)
+				.then(response => response.json())
+				.then(data => {
+					// Xử lý dữ liệu từ response
+					const entities = data.data.content;
+					const totalPages = data.data.totalPages;
+
+					// Hiển thị dữ liệu trên giao diện
+					const dataContainer = document.getElementById('data');
+					dataContainer.innerHTML = '';
+
+					if (entities.length === 0) {
+						// If entities array is empty, display a single column div occupying full width
+						dataContainer.innerHTML = `<div class="col-md-12">No data available</div>`;
+					} else {
+
+
+						entities.forEach(entity => {
+							dataContainer.innerHTML += `<div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">${entity.maloaitour}</h5>
+                                <p class="card-text">${entity.tenloaitour}</p>
+                            </div>
+                        </div>
+                    </div>`;
+						});
+					}
+
+					// Hiển thị phân trang
+					const paginationContainer = document.getElementById('pagination');
+					paginationContainer.innerHTML = '';
+
+					// Thêm nút trang đầu
+					paginationContainer.innerHTML += `<button onclick="loadData(0)">Đầu</button>`;
+
+					// Thêm nút trang trước khi hiện ...
+					if (page > 2) {
+						paginationContainer.innerHTML += `<button>...</button>`;
+					}
+
+					// Thêm các nút phân trang
+					for (let i = Math.max(0, page - 2); i < Math.min(totalPages, page + 3); i++) {
+						const activeClass = i === page ? 'active' : '';
+						paginationContainer.innerHTML += `<button class="${activeClass}" onclick="loadData(${i})">${i + 1}</button>`;
+					}
+
+					// Thêm nút trang sau khi hiện ...
+					if (page < totalPages - 3) {
+						paginationContainer.innerHTML += `<button>...</button>`;
+					}
+
+					// Thêm nút trang cuối
+					paginationContainer.innerHTML += `<button onclick="loadData(${totalPages - 1})">Cuối</button>`;
+				})
+				.catch(error => console.error(error));
+		}
+
+		// Gọi phương thức loadData khi trang được tải
+		document.addEventListener('DOMContentLoaded', function () {
+			loadData(0); // Load trang đầu tiên khi trang được tải
+		});
+	</script>

@@ -1,46 +1,44 @@
 package com.dichvudulich.controllers;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import Header.Header;
+import Result.Result;
+import com.dichvudulich.models.*;
+import com.dichvudulich.pagination.PageUtils;
+import com.dichvudulich.payload.request.LoaiTourEntityRequest;
+import com.dichvudulich.payload.response.LoaiTourResponse;
+import com.dichvudulich.payload.response.MessageResponse;
+import com.dichvudulich.repository.LoaiTourRepository;
+import com.dichvudulich.repository.OrderRepository;
+import com.dichvudulich.repository.RoleRepository;
+import com.dichvudulich.repository.UserRepository;
+import com.dichvudulich.security.jwt.JwtUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.dichvudulich.models.DatabaseFile;
-import com.dichvudulich.models.DatabaseFileService;
-import com.dichvudulich.models.FileInfo;
-import com.dichvudulich.models.FilesStorageService;
-import com.dichvudulich.models.LoaitourEntity;
-import com.dichvudulich.models.ResponseMessage;
-import com.dichvudulich.payload.request.LoaiTourEntityRequest;
-import com.dichvudulich.payload.response.MessageResponse;
-import com.dichvudulich.repository.LoaiTourRepository;
-import com.dichvudulich.repository.RoleRepository;
-import com.dichvudulich.repository.UserRepository;
-import com.dichvudulich.security.jwt.JwtUtils;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import jakarta.validation.Valid;
-
+@SuppressWarnings("unchecked")
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
@@ -57,6 +55,8 @@ public class LoaiTourController {
 
 	@Autowired
 	RoleRepository roleRepository;
+	@Autowired
+	OrderRepository orderRepository;
 
 	@Autowired
 	PasswordEncoder encoder;
@@ -70,27 +70,68 @@ public class LoaiTourController {
 	@Autowired
 	private DatabaseFileService fileStorageService;
 
+
+
 	@GetMapping("/loaitour/{id}")
-	public ResponseEntity<Optional<LoaitourEntity>> getEmployeeById(@PathVariable Long id) {
-		Optional<LoaitourEntity> user = loaiTourRepository.findById(id);
-		return ResponseEntity.ok(user);
+	public ResponseEntity<Optional<LoaitourEntity>> getLoaitourById(@PathVariable Long id) {
+		Optional<LoaitourEntity> loaitour = loaiTourRepository.findById(id);
+		return ResponseEntity.ok(loaitour);
 	}
 
-	@GetMapping(value = "/loaitour")
-	public List<LoaitourEntity> findAll() {
+	@GetMapping("/loaitour1")
+	public ResponseEntity<List<LoaitourEntity>> getLoaitour() {
+		List<LoaitourEntity> loaitour = loaiTourRepository.findByStatus();
+		return ResponseEntity.ok(loaitour);
+	}
 
-		return (List<LoaitourEntity>) this.loaiTourRepository.findAll();
+	@GetMapping("/loaitour2")
+	public ResponseEntity<?> getLoaitour2() {
+		List<Order> loaitour = orderRepository.findAll();
+		return ResponseEntity.ok(loaitour);
+	}
+
+	@GetMapping("/loaitour")
+	public ResponseEntity<LoaiTourResponse<Page<LoaitourEntity>>> findAll(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "3") int size, HttpServletRequest request) {
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			Page<LoaitourEntity> loaitourPage = loaiTourRepository.findAllByTrangThai(pageable);
+
+			LoaiTourResponse<Page<LoaitourEntity>> response = new LoaiTourResponse<>();
+			if (loaitourPage.isEmpty()) {
+				response.setHeader(createHeader(request.getMethod()));
+				response.setResult(createErrorResult(loaitourPage.getSize()));
+				return ResponseEntity.ok(response);
+			}
+
+			response.setHeader(createHeader(request.getMethod()));
+			response.setResult(createSuccessResult(loaitourPage.getSize()));
+			response.setData(PageUtils.addIndexToPage(loaitourPage, page, size));
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			Map<String, Object> response = new HashMap<>();
+			Map<String, Object> header = new HashMap<>();
+			header.put("request_type", request.getMethod());
+			header.put("request_id", generateRequestId());
+			header.put("href", "/api/auth/register");
+			header.put("timestamp", generateTimestamp());
+			response.put("header", header);
+			Map<String, Object> result = new HashMap<>();
+			result.put("code", "01");
+			result.put("message", "error");
+			result.put("description", "User registration failed: " + e.getMessage());
+			response.put("result", result);
+			return (ResponseEntity<LoaiTourResponse<Page<LoaitourEntity>>>) response;
+		}
 
 	}
 
 	@PostMapping("/loaitour")
 	public ResponseEntity<?> createLoaitour(@Valid @RequestBody LoaiTourEntityRequest loaiTourEntityRequest) {
-		LoaitourEntity loaitour = new LoaitourEntity(loaiTourEntityRequest.getMaloaitour(),
-				loaiTourEntityRequest.getTenloaitour(), loaiTourEntityRequest.getTrangthai());
-		loaitour.setTrangthai(true);
+		ModelMapper modelMapper = new ModelMapper();
+		LoaitourEntity loaitour =  modelMapper.map(loaiTourEntityRequest, LoaitourEntity.class);
 		loaiTourRepository.save(loaitour);
-
-		return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+		return ResponseEntity.ok(new MessageResponse("Tour registered successfully!"));
 	}
 
 	@PutMapping("/loaitour/{id}")
@@ -152,6 +193,43 @@ public class LoaiTourController {
 		return ResponseEntity.ok()
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
 				.body(file);
+	}
+
+	private Header createHeader(String requestType) {
+		Header header = new Header();
+		header.setRequest_type(requestType);
+		header.setRequest_id(generateRequestId());
+		header.setHref("/api/auth/loaitour");
+		header.setTimestamp(generateTimestamp());
+		return header;
+	}
+
+	private Result createSuccessResult(Integer count) {
+		Result result = new Result();
+		result.setCode("00");
+		result.setMessage("success");
+		result.setDescription("All the tour data");
+		return result;
+	}
+
+	private Result createErrorResult(Integer count) {
+		Result result = new Result();
+		result.setCode("00");
+		result.setMessage("success");
+		result.setDescription("No tour types found");
+		return result;
+	}
+
+	private String generateRequestId() {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		return now.format(formatter);
+	}
+
+	private String generateTimestamp() {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+		return now.format(formatter);
 	}
 
 }
